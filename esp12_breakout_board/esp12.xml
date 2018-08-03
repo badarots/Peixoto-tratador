@@ -1,0 +1,355 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export version="D">
+  <design>
+    <source>/home/badaro/Projetos/Peixoto/hardware/esp12.sch</source>
+    <date>qui 05 jul 2018 11:24:23 -03</date>
+    <tool>Eeschema 4.0.7</tool>
+    <sheet number="1" name="/" tstamps="/">
+      <title_block>
+        <title/>
+        <company/>
+        <rev/>
+        <date/>
+        <source>esp12.sch</source>
+        <comment number="1" value=""/>
+        <comment number="2" value=""/>
+        <comment number="3" value=""/>
+        <comment number="4" value=""/>
+      </title_block>
+    </sheet>
+  </design>
+  <components>
+    <comp ref="U1">
+      <value>ESP-12E</value>
+      <libsource lib="ESP8266" part="ESP-12E"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5B3E1B76</tstamp>
+    </comp>
+    <comp ref="R1">
+      <value>10k</value>
+      <libsource lib="device" part="R"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5B3E1E06</tstamp>
+    </comp>
+    <comp ref="C1">
+      <value>100n</value>
+      <libsource lib="device" part="C"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5B3E1E57</tstamp>
+    </comp>
+    <comp ref="J2">
+      <value>Conn_01x08_Male</value>
+      <libsource lib="conn" part="Conn_01x08_Male"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5B3E22AE</tstamp>
+    </comp>
+    <comp ref="J1">
+      <value>Conn_01x08_Male</value>
+      <libsource lib="conn" part="Conn_01x08_Male"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5B3E24C9</tstamp>
+    </comp>
+    <comp ref="J4">
+      <value>Conn_01x06_Male</value>
+      <libsource lib="conn" part="Conn_01x06_Male"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5B3E2721</tstamp>
+    </comp>
+    <comp ref="J3">
+      <value>Conn_01x06_Male</value>
+      <libsource lib="conn" part="Conn_01x06_Male"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5B3E2810</tstamp>
+    </comp>
+    <comp ref="R3">
+      <value>10k</value>
+      <libsource lib="device" part="R"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5B3E3202</tstamp>
+    </comp>
+    <comp ref="R2">
+      <value>10k</value>
+      <libsource lib="device" part="R"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5B3E323D</tstamp>
+    </comp>
+    <comp ref="R4">
+      <value>10k</value>
+      <libsource lib="device" part="R"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5B3E328B</tstamp>
+    </comp>
+    <comp ref="U2">
+      <value>LM1117-3.3</value>
+      <libsource lib="regul" part="LM1117-3.3"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5B3E1D4B</tstamp>
+    </comp>
+  </components>
+  <libparts>
+    <libpart lib="device" part="C">
+      <description>Unpolarized capacitor</description>
+      <footprints>
+        <fp>C_*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">C</field>
+        <field name="Value">C</field>
+      </fields>
+      <pins>
+        <pin num="1" name="~" type="passive"/>
+        <pin num="2" name="~" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="conn" part="Conn_01x06_Male">
+      <description>Generic connector, single row, 01x06</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>Connector*:*_??x*mm*</fp>
+        <fp>Connector*:*1x??x*mm*</fp>
+        <fp>Pin?Header?Straight?1X*</fp>
+        <fp>Pin?Header?Angled?1X*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">J</field>
+        <field name="Value">Conn_01x06_Male</field>
+      </fields>
+      <pins>
+        <pin num="1" name="Pin_1" type="passive"/>
+        <pin num="2" name="Pin_2" type="passive"/>
+        <pin num="3" name="Pin_3" type="passive"/>
+        <pin num="4" name="Pin_4" type="passive"/>
+        <pin num="5" name="Pin_5" type="passive"/>
+        <pin num="6" name="Pin_6" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="conn" part="Conn_01x08_Male">
+      <description>Generic connector, single row, 01x08</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>Connector*:*_??x*mm*</fp>
+        <fp>Connector*:*1x??x*mm*</fp>
+        <fp>Pin?Header?Straight?1X*</fp>
+        <fp>Pin?Header?Angled?1X*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">J</field>
+        <field name="Value">Conn_01x08_Male</field>
+      </fields>
+      <pins>
+        <pin num="1" name="Pin_1" type="passive"/>
+        <pin num="2" name="Pin_2" type="passive"/>
+        <pin num="3" name="Pin_3" type="passive"/>
+        <pin num="4" name="Pin_4" type="passive"/>
+        <pin num="5" name="Pin_5" type="passive"/>
+        <pin num="6" name="Pin_6" type="passive"/>
+        <pin num="7" name="Pin_7" type="passive"/>
+        <pin num="8" name="Pin_8" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="ESP8266" part="ESP-12E">
+      <description>ESP8622 ESP-12E module, 22 pins, 2mm, PCB antenna</description>
+      <docs>http://l0l.org.uk/2014/12/esp8266-modules-hardware-guide-gotta-catch-em-all/</docs>
+      <footprints>
+        <fp>ESP-12E</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">ESP-12E</field>
+      </fields>
+      <pins>
+        <pin num="1" name="REST" type="input"/>
+        <pin num="2" name="ADC" type="passive"/>
+        <pin num="3" name="CH_PD" type="input"/>
+        <pin num="4" name="GPIO16" type="BiDi"/>
+        <pin num="5" name="GPIO14" type="BiDi"/>
+        <pin num="6" name="GPIO12" type="BiDi"/>
+        <pin num="7" name="GPIO13" type="BiDi"/>
+        <pin num="8" name="VCC" type="power_in"/>
+        <pin num="9" name="CS0" type="BiDi"/>
+        <pin num="10" name="MISO" type="BiDi"/>
+        <pin num="11" name="GPIO9" type="BiDi"/>
+        <pin num="12" name="GPIO10" type="BiDi"/>
+        <pin num="13" name="MOSI" type="BiDi"/>
+        <pin num="14" name="SCLK" type="BiDi"/>
+        <pin num="15" name="GND" type="power_in"/>
+        <pin num="16" name="GPIO15" type="BiDi"/>
+        <pin num="17" name="GPIO2" type="BiDi"/>
+        <pin num="18" name="GPIO0" type="BiDi"/>
+        <pin num="19" name="GPIO5" type="BiDi"/>
+        <pin num="20" name="GPIO4" type="BiDi"/>
+        <pin num="21" name="RXD" type="input"/>
+        <pin num="22" name="TXD" type="output"/>
+      </pins>
+    </libpart>
+    <libpart lib="regul" part="LM1117-1.8">
+      <aliases>
+        <alias>LM1117-2.5</alias>
+        <alias>LM1117-3.3</alias>
+        <alias>LM1117-5.0</alias>
+        <alias>TLV1117-15</alias>
+        <alias>TLV1117-18</alias>
+        <alias>TLV1117-25</alias>
+        <alias>TLV1117-33</alias>
+        <alias>TLV1117-50</alias>
+      </aliases>
+      <description>800mA Low-Dropout Linear Regulator, 1.8V fixed output, TO-220/TO-252/TO-263/SOT-223</description>
+      <docs>http://www.ti.com/lit/ds/symlink/lm1117.pdf</docs>
+      <footprints>
+        <fp>SOT?223*</fp>
+        <fp>TO?263*</fp>
+        <fp>TO?252*</fp>
+        <fp>TO?220*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">LM1117-1.8</field>
+      </fields>
+      <pins>
+        <pin num="1" name="GND" type="power_in"/>
+        <pin num="2" name="VO" type="power_out"/>
+        <pin num="3" name="VI" type="power_in"/>
+      </pins>
+    </libpart>
+    <libpart lib="device" part="R">
+      <description>Resistor</description>
+      <footprints>
+        <fp>R_*</fp>
+        <fp>R_*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">R</field>
+        <field name="Value">R</field>
+      </fields>
+      <pins>
+        <pin num="1" name="~" type="passive"/>
+        <pin num="2" name="~" type="passive"/>
+      </pins>
+    </libpart>
+  </libparts>
+  <libraries>
+    <library logical="device">
+      <uri>/usr/share/kicad/library/device.lib</uri>
+    </library>
+    <library logical="regul">
+      <uri>/usr/share/kicad/library/regul.lib</uri>
+    </library>
+    <library logical="ESP8266">
+      <uri>/home/badaro/kicad/libraries/kicad-ESP8266/ESP8266.lib</uri>
+    </library>
+    <library logical="conn">
+      <uri>/usr/share/kicad/library/conn.lib</uri>
+    </library>
+  </libraries>
+  <nets>
+    <net code="1" name="Net-(J1-Pad8)">
+      <node ref="J1" pin="8"/>
+      <node ref="U2" pin="3"/>
+    </net>
+    <net code="2" name="Net-(J2-Pad2)">
+      <node ref="U1" pin="16"/>
+      <node ref="J2" pin="2"/>
+      <node ref="R1" pin="1"/>
+    </net>
+    <net code="3" name="Net-(J2-Pad4)">
+      <node ref="J2" pin="4"/>
+      <node ref="R2" pin="1"/>
+      <node ref="J3" pin="2"/>
+      <node ref="U1" pin="18"/>
+    </net>
+    <net code="4" name="Net-(J2-Pad3)">
+      <node ref="U1" pin="17"/>
+      <node ref="J2" pin="3"/>
+    </net>
+    <net code="5" name="Net-(J2-Pad5)">
+      <node ref="U1" pin="19"/>
+      <node ref="J2" pin="5"/>
+    </net>
+    <net code="6" name="Net-(J2-Pad6)">
+      <node ref="U1" pin="20"/>
+      <node ref="J2" pin="6"/>
+    </net>
+    <net code="7" name="Net-(C1-Pad2)">
+      <node ref="J2" pin="1"/>
+      <node ref="U1" pin="15"/>
+      <node ref="C1" pin="2"/>
+      <node ref="R1" pin="2"/>
+      <node ref="U2" pin="1"/>
+      <node ref="J3" pin="1"/>
+    </net>
+    <net code="8" name="Net-(J2-Pad8)">
+      <node ref="U1" pin="22"/>
+      <node ref="J3" pin="4"/>
+      <node ref="J2" pin="8"/>
+    </net>
+    <net code="9" name="Net-(J2-Pad7)">
+      <node ref="U1" pin="21"/>
+      <node ref="J3" pin="3"/>
+      <node ref="J2" pin="7"/>
+    </net>
+    <net code="10" name="Net-(J4-Pad2)">
+      <node ref="J4" pin="2"/>
+      <node ref="U1" pin="10"/>
+    </net>
+    <net code="11" name="Net-(J1-Pad2)">
+      <node ref="J1" pin="2"/>
+      <node ref="U1" pin="2"/>
+    </net>
+    <net code="12" name="Net-(J1-Pad3)">
+      <node ref="J1" pin="3"/>
+      <node ref="R3" pin="1"/>
+      <node ref="U1" pin="3"/>
+    </net>
+    <net code="13" name="Net-(J1-Pad4)">
+      <node ref="J1" pin="4"/>
+      <node ref="U1" pin="4"/>
+    </net>
+    <net code="14" name="Net-(J1-Pad5)">
+      <node ref="J1" pin="5"/>
+      <node ref="U1" pin="5"/>
+    </net>
+    <net code="15" name="Net-(J1-Pad6)">
+      <node ref="U1" pin="6"/>
+      <node ref="J1" pin="6"/>
+    </net>
+    <net code="16" name="Net-(J1-Pad7)">
+      <node ref="J1" pin="7"/>
+      <node ref="U1" pin="7"/>
+    </net>
+    <net code="17" name="Net-(C1-Pad1)">
+      <node ref="U2" pin="2"/>
+      <node ref="R2" pin="2"/>
+      <node ref="R3" pin="2"/>
+      <node ref="J3" pin="6"/>
+      <node ref="U1" pin="8"/>
+      <node ref="C1" pin="1"/>
+      <node ref="R4" pin="2"/>
+    </net>
+    <net code="18" name="Net-(J4-Pad1)">
+      <node ref="J4" pin="1"/>
+      <node ref="U1" pin="9"/>
+    </net>
+    <net code="19" name="Net-(J1-Pad1)">
+      <node ref="U1" pin="1"/>
+      <node ref="J3" pin="5"/>
+      <node ref="J1" pin="1"/>
+      <node ref="R4" pin="1"/>
+    </net>
+    <net code="20" name="Net-(J4-Pad3)">
+      <node ref="U1" pin="11"/>
+      <node ref="J4" pin="3"/>
+    </net>
+    <net code="21" name="Net-(J4-Pad4)">
+      <node ref="U1" pin="12"/>
+      <node ref="J4" pin="4"/>
+    </net>
+    <net code="22" name="Net-(J4-Pad5)">
+      <node ref="U1" pin="13"/>
+      <node ref="J4" pin="5"/>
+    </net>
+    <net code="23" name="Net-(J4-Pad6)">
+      <node ref="U1" pin="14"/>
+      <node ref="J4" pin="6"/>
+    </net>
+  </nets>
+</export>

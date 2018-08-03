@@ -1,0 +1,4 @@
+(fp_lib_table
+  (lib (name RJ11)(type KiCad)(uri "$(KIPRJMOD)/RJ11.pretty")(options "")(descr ""))
+  (lib (name RJ45)(type KiCad)(uri "$(KIPRJMOD)/RJ45.pretty")(options "")(descr ""))
+)
