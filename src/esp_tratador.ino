@@ -76,22 +76,17 @@ void interMotor() {
 }
 
 void callback(char* topic, byte* payload, unsigned int length) {
-  Serial.print("Message arrived [");
-  Serial.print(topic);
-  Serial.print("] ");
-  for (byte i = 0; i < length; i++) {
-    Serial.print((char)payload[i]);
-  }
-  Serial.println();
+  // In order to republish this payload, a copy must be made
+  // as the orignal payload buffer will be overwritten whilst
+  // constructing the PUBLISH packet.
 
-  // Switch on the LED if an 1 was received as first character
-  if ((char)payload[0] == '1') {
-    digitalWrite(output_pins[0], LOW);   // Turn the LED on (Note that LOW is the voltage level
-    // but actually the LED is on; this is because
-    // it is acive low on the ESP-01)
-  } else {
-    digitalWrite(output_pins[0], HIGH);  // Turn the LED off by making the voltage HIGH
-  }
+  // Allocate the correct amount of memory for the payload copy
+  byte* p = (byte*)malloc(length);
+  // Copy the payload to the new buffer
+  memcpy(p,payload,length);
+  mqtt_client.publish("tratador", p, length);
+  // Free the memory
+  free(p);
 }
 
 void reconnectWifi() {
@@ -129,8 +124,8 @@ void setup()  {
   setFrequency(FREQ_PIN, FREQ_STD);
 
   // configura interruptor dos sinais de entrada
-  // attachInterrupt(digitalPinToInterrupt(input_pins[0]), interPresenca, RISING);
-  // attachInterrupt(digitalPinToInterrupt(input_pins[1]), interMotor, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(input_pins[0]), interPresenca, RISING);
+  attachInterrupt(digitalPinToInterrupt(input_pins[1]), interMotor, CHANGE);
 
   Serial.begin(115200);
   Serial.setDebugOutput(true);
