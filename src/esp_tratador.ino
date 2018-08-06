@@ -104,7 +104,7 @@ boolean reconnectMQTT() {
   Serial.println("Connecting to the MQTT broker...");
   if (mqtt_client.connect("tratador")) {
     // Once connected, publish an announcement...
-    mqtt_client.publish("tratador","hello world");
+    mqtt_client.publish("tratador","hello world", true);
     // ... and resubscribe
     mqtt_client.subscribe("controlador");
   }
@@ -133,6 +133,10 @@ void setup()  {
 
   // configuracao do wifi
   WiFi.mode(WIFI_STA);
+
+  // configuração do MQTT 
+  mqtt_client.setServer(mqtt_server, 1883);
+  mqtt_client.setCallback(callback);
 
   //---------------------------------------------//
   //      configuracao do OTA
