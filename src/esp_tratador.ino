@@ -1,3 +1,17 @@
+/*
+Pinos ligados à placa:
+saídas: 4, 5, 14, 16
+relês: 14, 4(?)
+entradas: 12, 13
+
+Pinos em uso:
+serial 13(RX) e 15(TX)
+saida de frequência: 16
+pulso de inicio de ciclo: 14
+estado do ciclo: 12
+presença: 1(?)
+*/
+
 #include <ESP8266WiFi.h>
 #include <ESP8266WiFiMulti.h>
 #include <ESP8266mDNS.h>
@@ -16,6 +30,8 @@
 
 #define MOTOR_PIN 12
 #define PRESENCA_PIN 1
+#define MOTOR2_PIN 13
+#define PRESENCA2_PIN 3
 
 
 // classe para monitorar pinos de entrada
@@ -28,7 +44,6 @@ class InterruptMonitor
   bool do_read;         // flag que marca o agendamento de um leitura atrasada
   bool last_read;       // estado da última leitura
   unsigned long last_schedule;  // último agendamento da leitura
-
 
   public:
   // variáveis de configuração
@@ -76,7 +91,6 @@ class InterruptMonitor
   }
 };
 
-
 //---------------------------------------------//
 //            VARIÁVEIS GLOBAIS
 //---------------------------------------------//
@@ -97,23 +111,175 @@ unsigned long mqtt_lastrc;
 PubSubClient mqtt_client(wclient);
 
 // variávels para configurações dos pinos
-const byte output_pins[] = {16, 14, 2};
-const byte input_pins[] = {1, 12, 13};
+const byte output_pins[] = {2, 4, 5, 14, 16};
+const byte input_pins[] = {1, 12, 3};
 
 // variavaies de controle de inputs
 const unsigned int read_delay = 300;
 InterruptMonitor motor(MOTOR_PIN, read_delay);
 InterruptMonitor presenca(PRESENCA_PIN, read_delay);
+InterruptMonitor motor2(MOTOR2_PIN, read_delay);
+InterruptMonitor presenca2(PRESENCA2_PIN, read_delay);
 
 // variaveis para controle de pulsos
 int pulse_pin = -1;
 unsigned long pulse_end;
 
+//------------------------------------//
+//      DECLARAÇÃO DE FUNÇÕES
+//------------------------------------//
+// funçoes a serem chamadas pelos interrupts
+void interrupt_presenca() {
+  presenca.raiseFlag();
+}
+void interrupt_motor() {
+  motor.raiseFlag();
+}
+void interrupt_presenca2() {
+  presenca2.raiseFlag();
+}
+void interrupt_motor2() {
+  motor2.raiseFlag();
+}
+
+// callback que lida com as mensagem recebidas
+void mqtt_callback(char* topic, byte* payload, unsigned int length) {
+
+    // Copy the payload to the new char buffer
+    char* msg = (char*)malloc(length + 1);
+    memcpy(msg, (char*)payload, length);
+    msg[length] = '\0';
+    
+    // prepara a msg de resposta
+    char resp[30];
+    strncpy(resp, msg, sizeof(resp));
+    resp[sizeof(resp) -1] = '\0';
+
+    Serial.println(msg);
+    char* func = strtok(msg, ":");
+    char* command = strtok(0, ":");
+
+    if (strcmp(msg, "reset") == 0) {
+      reset_pins();
+    }
+    else if (strcmp(func, "cycle") == 0) {
+      if(strstr(command, "freq")) {
+        strncpy(command, "0000", 4);
+        int freq = atoi(command);
+        if (initCycle(freq) == 1) sprintf(resp, "invalid request");
+      }
+    }
+    else if (strstr(func, "pin")) {
+      strncpy(func, "000", 3);
+      int pin = atoi(func);
+      int pin_type = pinType(pin);
+
+      if (strcmp(command, "1") == 0 && pin_type == 1) {
+        digitalWrite(pin, HIGH);
+      }
+      else if (strcmp(command, "0") == 0 && pin_type == 1) {
+        digitalWrite(pin, LOW);
+      }
+      else if (strcmp(command, "state") == 0) {
+        byte state = digitalRead(pin);
+        sprintf(resp, "pin%d:%d", pin, state);
+      }
+      else if (strstr(command, "pulse") && pin_type == 1) {
+        strncpy(command, "00000", 5);
+        int pulse = atoi(command);
+        if (setPulse(pin, pulse) == 1) sprintf(resp, "invalid request"); 
+      }
+      else if(strstr(command, "freq") && pin_type == 1) {
+        strncpy(command, "0000", 4);
+        int freq = atoi(command);
+        if (setFrequency(pin, freq) == 1) sprintf(resp, "invalid request");
+      }
+      else sprintf(resp, "invalid request");
+    } 
+    else sprintf(resp, "invalid request");
+    Serial.print("resp: "); Serial.println(resp);
+    
+    mqtt_client.publish(mqtt_clientname, resp);
+
+    free(msg);
+}
+
+int pinType(int pin) {
+  int type = 0;
+  for (byte i = 0; i < sizeof(output_pins); i++)
+    if (pin == output_pins[i]) type = 1;
+
+  for (byte i = 0; i < sizeof(input_pins); i++)
+    if (pin == input_pins[i]) type = 2;
+  
+  return type;
+}
+
+int setFrequency(int pin, int freq) {
+  if ( freq > FREQ_MAX || (freq < FREQ_MIN && freq != 0)) return 1;
+
+  analogWriteFreq(freq);
+  analogWrite(pin, 512);
+  return 0;
+}
+
+int setPulse(int pin, unsigned long pulse) {
+  if (pulse > PULSE_MAX || pulse < PULSE_MIN) return 1;
+
+  pulse_pin = pin;
+  pulse_end = millis() + pulse;
+  digitalWrite(pulse_pin, HIGH);
+  return 0;
+}
+
+int initCycle(int freq) {
+  if (setFrequency(FREQ_PIN, freq) == 1) return 1; //configura velocidade do motor
+  delay(100); //espera o inversor ler corretamente a velocidade
+  setPulse(PULSE_PIN, 1000); //gera pulso que inicia o ciclo de tratamento
+  return 0;
+}
+
+void reset_pins() {
+  for (byte i = 0; i < sizeof(output_pins); i++) {
+    if (output_pins[i] == FREQ_PIN) setFrequency(FREQ_PIN, FREQ_STD);
+    else {
+      analogWrite(output_pins[i], 0);
+      digitalWrite(output_pins[i], LOW);
+    }
+  }
+}
+
+void reconnectWifi() {
+  Serial.print("Connecting to ");
+  Serial.print(ssid);
+  Serial.println("...");
+  WiFi.begin(ssid, pass);
+
+if (WiFi.waitForConnectResult() != WL_CONNECTED)
+  return;
+Serial.println("WiFi connected");
+}
+
+bool reconnectMQTT() {
+  Serial.println("Connecting to the MQTT broker...");
+  if (mqtt_client.connect(mqtt_clientname)) {
+    // Once connected, publish an announcement...
+    mqtt_client.publish(mqtt_clientname, "hello world", true);
+    // ... and resubscribe
+    mqtt_client.subscribe(mqtt_hostname);
+  }
+  return mqtt_client.connected();
+}
 
 //---------------------------------------------//
 //                  SETUP
 //---------------------------------------------//
 void setup()  {
+  Serial.begin(115200);
+  Serial.swap();        // muda pinos do serial para 13(RX) e 15(TX) 
+  Serial.setDebugOutput(true);
+  Serial.println();
+  
   //configuração dos pinos
   for (byte i = 0; i < sizeof(output_pins); i++) {
     pinMode(output_pins[i], OUTPUT);
@@ -128,18 +294,15 @@ void setup()  {
   // configura interruptor dos pinos de entrada
   attachInterrupt(digitalPinToInterrupt(presenca.pin), interrupt_presenca, RISING);
   attachInterrupt(digitalPinToInterrupt(motor.pin), interrupt_motor, CHANGE);
-
-  Serial.begin(115200);
-  Serial.setDebugOutput(true);
-  Serial.println();
+  attachInterrupt(digitalPinToInterrupt(presenca2.pin), interrupt_presenca2, RISING);
+  attachInterrupt(digitalPinToInterrupt(motor2.pin), interrupt_motor2, CHANGE);
 
   // configuracao do wifi
   WiFi.mode(WIFI_STA);
 
   // configuração do MQTT 
   mqtt_client.setServer(mqtt_server, 1883);
-  mqtt_client.setCallback(callback);
-
+  mqtt_client.setCallback(mqtt_callback);
 
   //---------------------------------------------//
   //            CONFIGURAÇÃO DO OTA
@@ -194,7 +357,6 @@ void setup()  {
   Serial.println(WiFi.localIP());
 }
 
-
 //---------------------------------------------//
 //                  LOOP
 //---------------------------------------------//
@@ -247,124 +409,18 @@ void loop() {
     if (motor_state == LOW) msg[6] = '1';
     mqtt_client.publish(mqtt_clientname, msg);
   }
-}
-
-//------------------------------------//
-//      DECLARAÇÃO DE FUNÇÕES
-//------------------------------------//
-// funçoes a serem chamadas pelos interrupts
-void interrupt_presenca() {
-  presenca.raiseFlag();
-}
-void interrupt_motor() {
-  motor.raiseFlag();
-}
-
-int pinType(int pin) {
-  int type = 0;
-  for (byte i = 0; i < sizeof(output_pins); i++)
-    if (pin == output_pins[i]) type = 1;
-
-  for (byte i = 0; i < sizeof(input_pins); i++)
-    if (pin == input_pins[i]) type = 2;
   
-  return type;
-}
-
-int setFrequency(int pin, int freq) {
-  if (freq > FREQ_MAX || freq < FREQ_MIN) return 1;
-
-  analogWriteFreq(freq);
-  analogWrite(pin, 512);
-  return 0;
-}
-
-int setPulse(int pin, unsigned long pulse) {
-  if (pulse > PULSE_MAX || pulse < PULSE_MIN) return 1;
-
-  pulse_pin = pin;
-  pulse_end = millis() + pulse;
-  digitalWrite(pulse_pin, HIGH);
-  return 0;
-}
-
-int initCycle(int freq) {
-  if (setFrequency(FREQ_PIN, freq) == 1) return 1; //configura velocidade do motor
-  delay(100); //espera o inversor ler corretamente a velocidade
-  setPulse(PULSE_PIN, 1000); //gera pulso que inicia o ciclo de tratamento
-  return 0;
-}
-
-void callback(char* topic, byte* payload, unsigned int length) {
-    char resp[30];
-    char* msg = (char*)payload;
-    strcpy(resp, msg);
-
-    Serial.println(msg);
-    char* func = strtok(msg, ":");
-    char* command = strtok(0, ":");
-
-
-    if (strcmp(func, "cycle") == 0) {
-      if(strstr(command, "freq")) {
-        strncpy(command, "0000", 4);
-        int freq = atoi(command);
-        if (initCycle(freq) == 1) sprintf(resp, "invalid request");
-      }
-    }
-    else if (strstr(func, "pin")) {
-      strncpy(func, "000", 3);
-      int pin = atoi(func);
-      Serial.print("pin: "); Serial.println(pin);
-      int pin_type = pinType(pin);
-
-      if (strcmp(command, "on") == 0 && pin_type == 1) {
-        digitalWrite(pin, HIGH);
-      }
-      else if (strcmp(command, "off") == 0 && pin_type == 1) {
-        digitalWrite(pin, LOW);
-      }
-      else if (strcmp(command, "state") == 0) {
-        byte state = digitalRead(pin);
-        sprintf(resp, "pin%d:%d", pin, state);
-      }
-      else if (strstr(command, "pulse") && pin_type == 1) {
-        strncpy(command, "00000", 5);
-        int pulse = atoi(command);
-        if (setPulse(pin, pulse) == 1) sprintf(resp, "invalid request"); 
-      }
-      else if(strstr(command, "freq") && pin_type == 1) {
-        strncpy(command, "0000", 4);
-        int freq = atoi(command);
-        if (setFrequency(pin, freq) == 1) sprintf(resp, "invalid request");
-      }
-      else sprintf(resp, "invalid request");
-    } 
-    else sprintf(resp, "invalid request");
-    Serial.print("resp: "); Serial.println(resp);
-    
-    mqtt_client.publish(mqtt_clientname, "msg recebida");
-    mqtt_client.publish(mqtt_clientname, resp);
-}
-
-void reconnectWifi() {
-  Serial.print("Connecting to ");
-  Serial.print(ssid);
-  Serial.println("...");
-  WiFi.begin(ssid, pass);
-
-if (WiFi.waitForConnectResult() != WL_CONNECTED)
-  return;
-Serial.println("WiFi connected");
-}
-
-bool reconnectMQTT() {
-  Serial.println("Connecting to the MQTT broker...");
-  if (mqtt_client.connect(mqtt_clientname)) {
-    // Once connected, publish an announcement...
-    mqtt_client.publish(mqtt_clientname, "hello world", true);
-    // ... and resubscribe
-    mqtt_client.subscribe(mqtt_hostname);
+  
+  int presenca2_state = presenca2.update();
+  if (presenca2_state == HIGH) {
+    //envia mensagem
+    mqtt_client.publish(mqtt_clientname, "presenca2");
   }
-  return mqtt_client.connected();
+  int motor2_state = motor.update();
+  if (motor2_state != -1) {
+    //envia mensagem
+    char msg[] = "motor2:0";
+    if (motor2_state == LOW) msg[6] = '1';
+    mqtt_client.publish(mqtt_clientname, msg);
+  }
 }
