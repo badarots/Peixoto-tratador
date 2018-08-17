@@ -8,6 +8,7 @@ Pinos em uso:
 serial 13(RX) e 15(TX)
 saida de frequência: 16
 pulso de inicio de ciclo: 14
+desabilita temporizador externo: 4(?)
 estado do ciclo: 12
 presença: 1(?)
 */
@@ -29,6 +30,7 @@ presença: 1(?)
 #define PULSE_MIN 1
 
 #define MOTOR_PIN 12
+#define ATIVO_PIN 4
 #define PRESENCA_PIN 1
 #define MOTOR2_PIN 13
 #define PRESENCA2_PIN 3
@@ -49,14 +51,14 @@ class InterruptMonitor
   // variáveis de configuração
 	byte pin;             // numero do pino de entrada
   unsigned int delay;   // atraso em ms entre o agendamento e a leitura
-  
-  // Constructor - cria o monitor 
+
+  // Constructor - cria o monitor
   // and initializes the member variables and state
   InterruptMonitor(byte input_pin, unsigned int msdelay)
   {
 	pin = input_pin;
-	pinMode(pin, INPUT_PULLUP);     
-	  
+	pinMode(pin, INPUT_PULLUP);
+
   delay = msdelay;
   flag = do_read = false;
   last_read = digitalRead(pin);
@@ -68,7 +70,7 @@ class InterruptMonitor
   void raiseFlag() {
     flag = true;
   }
- 
+
   int update() {
     // variável que guarda resposta
     // -1: não houve mudanças, 0: pino mudou para low, 1: pino mudou para high
@@ -84,8 +86,8 @@ class InterruptMonitor
     if (do_read && millis() - last_schedule > delay) {
       do_read = false;
       bool read = digitalRead(pin);
-      
-      if (read != last_read) resp = last_read = read;      
+
+      if (read != last_read) resp = last_read = read;
     }
     return resp;
   }
@@ -125,6 +127,10 @@ InterruptMonitor presenca2(PRESENCA2_PIN, read_delay);
 int pulse_pin = -1;
 unsigned long pulse_end;
 
+// variáveis de controle da ativação do módulo
+unsigned long ativo_temp;
+bool ativo;
+
 //------------------------------------//
 //      DECLARAÇÃO DE FUNÇÕES
 //------------------------------------//
@@ -149,7 +155,7 @@ void mqtt_callback(char* topic, byte* payload, unsigned int length) {
     char* msg = (char*)malloc(length + 1);
     memcpy(msg, (char*)payload, length);
     msg[length] = '\0';
-    
+
     // prepara a msg de resposta
     char resp[30];
     strncpy(resp, msg, sizeof(resp));
@@ -159,7 +165,13 @@ void mqtt_callback(char* topic, byte* payload, unsigned int length) {
     char* func = strtok(msg, ":");
     char* command = strtok(0, ":");
 
-    if (strcmp(msg, "reset") == 0) {
+    if(strcmp(msg, "on")) {
+      ativar_modulo(true);
+    }
+    else if (strcmp(msg, "off")) {
+      ativar_modulo(false);
+    }
+    else if (strcmp(msg, "reset") == 0) {
       reset_pins();
     }
     else if (strcmp(func, "cycle") == 0) {
@@ -187,7 +199,7 @@ void mqtt_callback(char* topic, byte* payload, unsigned int length) {
       else if (strstr(command, "pulse") && pin_type == 1) {
         strncpy(command, "00000", 5);
         int pulse = atoi(command);
-        if (setPulse(pin, pulse) == 1) sprintf(resp, "invalid request"); 
+        if (setPulse(pin, pulse) == 1) sprintf(resp, "invalid request");
       }
       else if(strstr(command, "freq") && pin_type == 1) {
         strncpy(command, "0000", 4);
@@ -195,10 +207,10 @@ void mqtt_callback(char* topic, byte* payload, unsigned int length) {
         if (setFrequency(pin, freq) == 1) sprintf(resp, "invalid request");
       }
       else sprintf(resp, "invalid request");
-    } 
+    }
     else sprintf(resp, "invalid request");
     Serial.print("resp: "); Serial.println(resp);
-    
+
     mqtt_client.publish(mqtt_clientname, resp);
 
     free(msg);
@@ -211,8 +223,14 @@ int pinType(int pin) {
 
   for (byte i = 0; i < sizeof(input_pins); i++)
     if (pin == input_pins[i]) type = 2;
-  
+
   return type;
+}
+
+void ativar_modulo(bool state) {
+  ativo = state;
+  ativo_temp = millis();
+  digitalWrite(ATIVO_PIN, state);
 }
 
 int setFrequency(int pin, int freq) {
@@ -233,9 +251,11 @@ int setPulse(int pin, unsigned long pulse) {
 }
 
 int initCycle(int freq) {
-  if (setFrequency(FREQ_PIN, freq) == 1) return 1; //configura velocidade do motor
+  if (setFrequency(FREQ_PIN, freq) == 1 || !ativo) return 1; //configura velocidade do motor
+
   delay(100); //espera o inversor ler corretamente a velocidade
   setPulse(PULSE_PIN, 1000); //gera pulso que inicia o ciclo de tratamento
+
   return 0;
 }
 
@@ -276,10 +296,10 @@ bool reconnectMQTT() {
 //---------------------------------------------//
 void setup()  {
   Serial.begin(115200);
-  Serial.swap();        // muda pinos do serial para 13(RX) e 15(TX) 
+  Serial.swap();        // muda pinos do serial para 13(RX) e 15(TX)
   Serial.setDebugOutput(true);
   Serial.println();
-  
+
   //configuração dos pinos
   for (byte i = 0; i < sizeof(output_pins); i++) {
     pinMode(output_pins[i], OUTPUT);
@@ -300,9 +320,12 @@ void setup()  {
   // configuracao do wifi
   WiFi.mode(WIFI_STA);
 
-  // configuração do MQTT 
+  // configuração do MQTT
   mqtt_client.setServer(mqtt_server, 1883);
   mqtt_client.setCallback(mqtt_callback);
+
+  // ativa módulo
+  ativar_modulo(true);
 
   //---------------------------------------------//
   //            CONFIGURAÇÃO DO OTA
@@ -382,7 +405,7 @@ void loop() {
     }
   }
 
-  // executa loop do MQTT 
+  // executa loop do MQTT
   if (mqtt_client.connected()) mqtt_client.loop();
 
   // controla pulso
@@ -409,8 +432,8 @@ void loop() {
     if (motor_state == LOW) msg[6] = '1';
     mqtt_client.publish(mqtt_clientname, msg);
   }
-  
-  
+
+
   int presenca2_state = presenca2.update();
   if (presenca2_state == HIGH) {
     //envia mensagem
@@ -422,5 +445,15 @@ void loop() {
     char msg[] = "motor2:0";
     if (motor2_state == LOW) msg[6] = '1';
     mqtt_client.publish(mqtt_clientname, msg);
+  }
+
+  // checa a presença do controlador
+  // é esperando que a cada 300s o controlador envie uma msg='on' para avisar que está tudo bem
+  // se essa msg não for recebida por dois ciclos seguidos o módulos será desativado e o temp. externo
+  // tomará seu lugar
+
+  unsigned long now = millis();
+  if (ativo && now - ativo_temp > 600000L + 10000L) {
+    ativar_modulo(false);
   }
 }
